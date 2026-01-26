@@ -1,0 +1,26 @@
+{
+    "name": "poe-ladder-bot",
+    "description": "Bot to help you find out more information about PoE Ladder",
+    "version": "0.0.1",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/halfacandan/PoELadderBot.git"
+    },
+    "main": "bot.js",
+    "scripts": {
+        "start": "node bot.js",
+        "dev": "node -r dotenv/config bot.js dotenv_config_path=.env.local"
+    },
+    "dependencies": {
+        "@discordjs/rest": "^2.6.0",
+        "@discordjs/builders": "^1.13.1",
+        "base64url": "^3.0.1",
+        "discord.js": "^14.25.1",
+        "node-fetch": "^3.3.2",
+        "dropin-request": "^1.1.1",
+        "@thatiemsz/text2png": "^2.3.3"
+    },
+    "devDependencies": {
+        "dotenv": "^17.2.3"
+    }
+}
