@@ -41,7 +41,7 @@ module.exports = {
             "value": 
                 ladders
                     .sort((a, b) => (a.OrderBy ?? 0) - (b.OrderBy ?? 0))
-                    .map((ladder) =>  ` * ${ladder.name}`)
+                    .map((ladder) =>  ` * [${ladder.name}](${process.env.SITE_BASE}ladder?ladderIdentifier=${ladder.identifier}&isPoe2=` + (ladder.isPoe2 ?? false).toString() + ")")
                     .join("\n")
         }
     },
@@ -49,45 +49,47 @@ module.exports = {
 
         if(ladders?.length == 0) return null; 
 
+        let appEmojis = await this.GetCustomAppEmojisAsync();
+
         let fields = [
             this.PrintLadderGroup(
-                "Path of Exile 1 (Events)",
+                `${appEmojis["poe1"]}  Path of Exile 1 (Events)`,
                 ladders.filter(l =>
                     !l.isPoe2 && l.registerable && l.event
                 )
             ),
             this.PrintLadderGroup(
-                "Path of Exile 1",
+                `${appEmojis["poe1"]}  Path of Exile 1`,
                 ladders.filter(l =>
                     !l.isPoe2 && l.registerable && !l.hardcore && !l.event && !l.private && !l.ruthless && !l.trade
                 )
             ),
             this.PrintLadderGroup(
-                "Path of Exile 1 (Hardcore)",
+                `${appEmojis["poe1"]}  Path of Exile 1 (Hardcore)`,
                 ladders.filter(l =>
                     !l.isPoe2 && l.registerable && l.hardcore && !l.event && !l.private && !l.ruthless && !l.trade
                 )
             ),
             this.PrintLadderGroup(
-                "Path of Exile 1 (Trade)",
+                `${appEmojis["poe1"]}  Path of Exile 1 (Trade)`,
                 ladders.filter(l =>
                     !l.isPoe2 && l.registerable && !l.hardcore && !l.event && !l.private && !l.ruthless && l.trade
                 )
             ),
             this.PrintLadderGroup(
-                "Path of Exile 1 (Ruthless)",
+                `${appEmojis["poe1"]}  Path of Exile 1 (Ruthless)`,
                 ladders.filter(l =>
                     !l.isPoe2 && l.registerable && l.ruthless
                 )
             ),
             this.PrintLadderGroup(
-                "Path of Exile 1 (Private Leagues)",
+                `${appEmojis["poe1"]}  Path of Exile 1 (Private Leagues)`,
                 ladders.filter(l => 
                     !l.isPoe2 && l.registerable && l.private
                 )
             ),
             this.PrintLadderGroup(
-                "Path of Exile 2",
+                `${appEmojis["poe2"]}  Path of Exile 2`,
                 ladders.filter(l =>
                     l.isPoe2 && l.registerable
                 )
@@ -192,13 +194,13 @@ module.exports = {
         }
 
         for(var i=0; i < reactions.length; i++){
-            let emojiCode = await this.GetEmojiCodeAsync(bot, reactions[i]);
+            let emojiCode = await this.GetServerEmojiCodeAsync(bot, reactions[i]);
             if(emojiCode != null){
                 await msg.react(emojiCode);
             }
         }
-    },    
-    GetEmojiCodeAsync: async function (bot, emojiShortcode){
+    },
+    GetServerEmojiCodeAsync: async function (bot, emojiShortcode){
         // https://discordjs.guide/popular-topics/reactions.html#custom-emojis
 
         if(emojiShortcode.match(/:[^:]+:$/g) != null && bot != null){
@@ -214,6 +216,17 @@ module.exports = {
             // This is a unicode emoji
             return emojiShortcode;
         }
+    },
+    GetCustomAppEmojisAsync: async function (){
+
+        var apiPath = `https://discord.com/api/v10/applications/${process.env.CLIENT_ID}/emojis`;
+        var emojiQuery = await fetch(apiPath, { headers: { Authorization: `Bot ${process.env.BOT_TOKEN}` } });
+        var emojiList = await emojiQuery.json();
+
+        var emojis = [];
+        emojiList?.items?.map(e => emojis[e.name] = `<:${e.name}:${e.id}>`);
+
+        return emojis;
     },
     SendReplies: async function(discord, bot, userMessage, replies, reactions = null, replyToPerson = false, reactToMessageNumber = null, isInteraction = false){
 
