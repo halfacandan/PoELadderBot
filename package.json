@@ -2,25 +2,36 @@
     "name": "poe-ladder-bot",
     "description": "Bot to help you find out more information about PoE Ladder",
     "version": "0.0.1",
+    "type": "module",
     "repository": {
         "type": "git",
         "url": "git://github.com/halfacandan/PoELadderBot.git"
     },
-    "main": "bot.js",
+    "main": "dist/bot.js",
     "scripts": {
-        "start": "node bot.js",
-        "dev": "node -r dotenv/config bot.js dotenv_config_path=.env.local"
+        "build": "tsc",
+        "start": "node dist/bot.js",
+        "dev": "npm run build && node -r dotenv/config dist/bot.js dotenv_config_path=.env.local",
+        "spell-check": "cspell \"*.md\" --config cspell.json"
+    },
+    "ts-node": {
+        "esm": true,
+        "experimentalEsm": true
     },
     "dependencies": {
-        "@discordjs/rest": "^2.6.0",
         "@discordjs/builders": "^1.13.1",
+        "@discordjs/rest": "^2.6.0",
+        "@thatiemsz/text2png": "^2.3.3",
         "base64url": "^3.0.1",
         "discord.js": "^14.25.1",
-        "node-fetch": "^3.3.2",
         "dropin-request": "^1.1.1",
-        "@thatiemsz/text2png": "^2.3.3"
+        "node-fetch": "^3.3.2"
     },
     "devDependencies": {
-        "dotenv": "^17.2.3"
+        "@types/node": "^20.10.0",
+        "cspell": "^9.6.4",
+        "dotenv": "^17.2.3",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.3.3"
     }
 }
