@@ -2,62 +2,80 @@ const botHelpCommand = "help";
 const botAboutCommand = "about";
 const lineBreak = "\n\uFEFF";
 
-const discord = require('discord.js');
-const helpers = require('./modules/helpers.js');
-const messages = require('./modules/messages.js');
+import discord, { Client, GatewayIntentBits, REST, SlashCommandBuilder, Routes, ActivityType } from 'discord.js';
+import { RequireAll, GetChannelIdAsync } from './modules/helpers.js';
+import { AboutThisBot, BotError, SendReplies } from './modules/messages.js';
 
-const bot = new discord.Client({
+const bot = new Client({
     intents: [
-        discord.GatewayIntentBits.MessageContent,
-        discord.GatewayIntentBits.DirectMessages,
-        discord.GatewayIntentBits.DirectMessageReactions,
-        discord.GatewayIntentBits.DirectMessageTyping,    
-        discord.GatewayIntentBits.Guilds,
-        discord.GatewayIntentBits.GuildExpressions,
-        discord.GatewayIntentBits.GuildMessages,    
-        discord.GatewayIntentBits.GuildMessageReactions,
-        discord.GatewayIntentBits.GuildMessageTyping
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.DirectMessages,
+        GatewayIntentBits.DirectMessageReactions,
+        GatewayIntentBits.DirectMessageTyping,    
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildExpressions,
+        GatewayIntentBits.GuildMessages,    
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.GuildMessageTyping
     ]
 });
 
 // Required to intercept the slash commands
-const rest = new discord.REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
+const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
 
 // Define global variables
 var botName;
-var jwtToken = process.env.API_JWT;
 
-// Connect to the GoW API
-const poeLadderApi = require('./modules/poeLadderApi.js');
+globalThis.slashCommands = {
+    [botAboutCommand]: {
+        name: botAboutCommand,
+        description: "Learn how to contribute to the PoE Ladder bot",
+        actionAsync: async () => {
+
+            return await AboutThisBot();
+        }
+    },
+    [botHelpCommand]: {
+        name: botHelpCommand,
+        description: "Get help with using the PoE Ladder bot",
+        actionAsync: async () => {
+
+            let supportChannelId = await GetChannelIdAsync(null, "support");
+            let helpCommands = Object.entries(globalThis.slashCommands).map(([key, command]) => 
+                `**/${command.name}** - ${command.description}`
+            );
+            let helpMessage = `You can get help in the ${supportChannelId} channel${lineBreak}${lineBreak}` + helpCommands.sort().join(lineBreak);
+
+            return helpMessage;
+        }
+    }
+};
+
+// Load all the slash command handlers
+RequireAll('./slashcommands');
 
 // Define Bot Behaviours
 bot.on('clientReady', async () => {
 
     botName = bot.user.username;
 
-    const commands = [
-        new discord.SlashCommandBuilder()
-            .setName(botAboutCommand)
-            .setDescription('learn how to contribute to the PoE Ladder bot')
-            .toJSON(),
-        new discord.SlashCommandBuilder()
-            .setName(botHelpCommand)
-            .setDescription('Get help with using the PoE Ladder bot')
-            .toJSON(),
-        new discord.SlashCommandBuilder()
-            .setName('ladders')
-            .setDescription('List the monitored PoE Ladder leagues')
+    let commands = Object.entries(globalThis.slashCommands).map(([key, command]) => {
+        return new SlashCommandBuilder()
+            .setName(command.name)
+            .setDescription(command.description)
             .toJSON()
-    ];
+    });
 
     // Configure the slash commands
     await rest.put(
-        discord.Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.SERVER_ID),
-        { body: commands },
+        Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.SERVER_ID),
+        { 
+            body: commands
+        }
     );
 
     bot.user.setPresence({
-        activities: [{ name: `Type /${botHelpCommand}`, type: discord.ActivityType.Listening }],
+        activities: [{ name: `Type /${botHelpCommand}`, type: ActivityType.Listening }],
         status: 'online',
     });
 
@@ -74,44 +92,12 @@ bot.on('interactionCreate', async interaction => {
 
     if(interaction.commandName == null) return;
 
-    switch (interaction.commandName) {
-        case `${botAboutCommand}`:
+    if(interaction.channel != null) interaction.channel.sendTyping();
 
-            if(interaction.channel != null) interaction.channel.sendTyping();
+    let actionResult = await globalThis.slashCommands[interaction.commandName]?.actionAsync();
+    replies.push(actionResult ?? BotError());
 
-            replies.push(await messages.AboutThisBot());
-            break;
-
-        case `${botHelpCommand}`:
-
-            if(interaction.channel != null) interaction.channel.sendTyping();
-            
-            let supportChannelId = await helpers.GetChannelIdAsync(interaction.guild, "support");
-            let helpCommands = await messages.ListBotCommands(botAboutCommand);
-            let helpMessage = `You can get help in the ${supportChannelId} channel${lineBreak}${lineBreak}` + helpCommands.sort().join(lineBreak);
-            replies.push(helpMessage);
-            break;
-
-        case 'ladders':
-
-            if(interaction.channel != null) interaction.channel.sendTyping();
-
-            let ladders = await poeLadderApi.GetIndexedLadders(jwtToken);
-            if(ladders?.length < 1){
-
-                replies.push(messages.BotError());
-
-            } else {
-
-                replies.push(await messages.ListLadders(ladders))
-            }
-            break;
-
-        default:
-            // Do nothing
-    }
-
-    await messages.SendReplies(discord, bot, interaction, replies, reactions, replyToPerson, reactToMessageNumber, true);
+    await SendReplies(discord, bot, interaction, replies, reactions, replyToPerson, reactToMessageNumber, true);
 });
 
 // Login to Discord as the Bot
