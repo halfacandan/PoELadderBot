@@ -7,10 +7,16 @@
         "type": "git",
         "url": "git://github.com/halfacandan/PoELadderBot.git"
     },
-    "main": "bot.js",
+    "main": "dist/bot.js",
     "scripts": {
-        "start": "node bot.js",
-        "dev": "node -r dotenv/config bot.js dotenv_config_path=.env.local"
+        "build": "tsc",
+        "start": "node dist/bot.js",
+        "dev": "npm run build && node -r dotenv/config dist/bot.js dotenv_config_path=.env.local",
+        "spell-check": "cspell \"*.md\" --config cspell.json"
+    },
+    "ts-node": {
+        "esm": true,
+        "experimentalEsm": true
     },
     "dependencies": {
         "@discordjs/builders": "^1.13.1",
@@ -22,6 +28,10 @@
         "node-fetch": "^3.3.2"
     },
     "devDependencies": {
-        "dotenv": "^17.2.3"
+        "@types/node": "^20.10.0",
+        "cspell": "^9.6.4",
+        "dotenv": "^17.2.3",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.3.3"
     }
 }

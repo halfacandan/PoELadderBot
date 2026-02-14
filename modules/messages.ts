@@ -1,14 +1,16 @@
+import { Client, AttachmentBuilder } from 'discord.js';
+import { text2png } from '@thatiemsz/text2png';
+
 const LineBreak = "\n\uFEFF";
 
-export function BotError() {
+export function BotError(): string {
     return "**\\*Blip\\*** *\\*Blip\\** ***\\*Blip\\**** End of Cheese Error";
 }
 
-export async function AboutThisBot() {
-
+export async function AboutThisBot(): Promise<any> {
     const BotAuthorDiscordId = '342266718334353408';
 
-    let embeddedMessage = {
+    const embeddedMessage = {
         "embed": {
             "title": ":robot:  PoE Ladder Bot",
             "description": `The PoE Ladder Bot was created by <@!${BotAuthorDiscordId}>. You can submit pull requests to the public git repo if you'd like to contribute.${LineBreak}`,
@@ -24,32 +26,29 @@ export async function AboutThisBot() {
     return embeddedMessage;
 }
 
-export async function ReactToMessageAsync(bot, message, reactions) {
-
+export async function ReactToMessageAsync(bot: Client, message: any, reactions: string | string[]): Promise<void> {
     if (bot == null || message == null || reactions == null) return;
 
-    if (typeof (reactions) === "string") {
-        reactions = Array(reactions);
-    }
+    const reactionsArray = typeof reactions === "string" ? [reactions] : reactions;
 
-    var msg = message;
+    let msg = message;
     if (message.constructor.name != "InteractionResponse") {
         msg = await message.channel.messages.fetch(message.id);
     }
 
-    for (var i = 0; i < reactions.length; i++) {
-        let emojiCode = await this.GetServerEmojiCodeAsync(bot, reactions[i]);
+    for (const reaction of reactionsArray) {
+        const emojiCode = await GetServerEmojiCodeAsync(bot, reaction);
         if (emojiCode != null) {
             await msg.react(emojiCode);
         }
     }
 }
 
-export async function GetServerEmojiCodeAsync(bot, emojiShortcode) {
+export async function GetServerEmojiCodeAsync(bot: Client, emojiShortcode: string): Promise<string | null> {
     // https://discordjs.guide/popular-topics/reactions.html#custom-emojis
     if (emojiShortcode.match(/:[^:]+:$/g) != null && bot != null) {
-        var emoji = await bot.emojis.cache.find(emoji => emoji.name == emojiShortcode.replace(/:|:$/g, ''));
-        if (typeof (emoji) !== "undefined") {
+        const emoji = bot.emojis.cache.find(em => em.name == emojiShortcode.replace(/:|:$/g, ''));
+        if (typeof emoji !== "undefined") {
             // This is a custom emoji
             return emoji.id;
         } else {
@@ -62,34 +61,39 @@ export async function GetServerEmojiCodeAsync(bot, emojiShortcode) {
     }
 }
 
-export async function GetCustomAppEmojisAsync() {
+export async function GetCustomAppEmojisAsync(): Promise<{ [key: string]: string }> {
+    const apiPath = `https://discord.com/api/v10/applications/${process.env.CLIENT_ID}/emojis`;
+    const emojiQuery = await fetch(apiPath, { headers: { Authorization: `Bot ${process.env.BOT_TOKEN}` } });
+    const emojiList = await emojiQuery.json() as any;
 
-    var apiPath = `https://discord.com/api/v10/applications/${process.env.CLIENT_ID}/emojis`;
-    var emojiQuery = await fetch(apiPath, { headers: { Authorization: `Bot ${process.env.BOT_TOKEN}` } });
-    var emojiList = await emojiQuery.json();
-
-    var emojis = [];
-    emojiList?.items?.map(e => emojis[e.name] = `<:${e.name}:${e.id}>`);
+    const emojis: { [key: string]: string } = {};
+    emojiList?.items?.map((e: any) => emojis[e.name] = `<:${e.name}:${e.id}>`);
 
     return emojis;
 }
 
-export async function SendReplies(discord, bot, userMessage, replies, reactions = null, replyToPerson = false, reactToMessageNumber = null, isInteraction = false) {
-
+export async function SendReplies(
+    bot: Client,
+    userMessage: any,
+    replies: any[],
+    reactions: string | string[] | null = null,
+    replyToPerson: boolean = false,
+    reactToMessageNumber: number | null = null,
+    isInteraction: boolean = false
+): Promise<void> {
     if (replies != null) {
+        let message: any;
+        let finalReplyMessage: any;
+        let reacted = false;
+        const messages: any[] = [];
 
-        var message;
-        var finalReplyMessage;
-        var reacted = false;
-        var messages = [];
-
-        for (var i = 0; i < replies.length; i++) {
+        for (let i = 0; i < replies.length; i++) {
             if (!isInteraction && (replyToPerson || userMessage == null || typeof userMessage.channel === "undefined" || userMessage.channel == null)) {
                 if (typeof replies[i] === "string") {
                     message = "\n" + replies[i];
                     messages.push(await userMessage.reply(replies[i], { split: true }));
                 } else {
-                    message = await ParseEmbeddedMessage(discord, replies[i]);
+                    message = await ParseEmbeddedMessage(replies[i]);
                     messages.push(await userMessage.reply({ embeds: [message.embed] }));
                 }
             } else {
@@ -105,7 +109,7 @@ export async function SendReplies(discord, bot, userMessage, replies, reactions 
                         messages.push(await userMessage.channel.send(replies[i], { split: true }));
                     }
                 } else {
-                    var messageFormatted;
+                    let messageFormatted: any;
                     if (typeof replies[i].embed === "undefined") {
                         messageFormatted = {
                             "content": replies[i].content,
@@ -116,7 +120,7 @@ export async function SendReplies(discord, bot, userMessage, replies, reactions 
                             }]
                         };
                     } else {
-                        message = await ParseEmbeddedMessage(discord, replies[i]);
+                        message = await ParseEmbeddedMessage(replies[i]);
                         if (message.files != null) {
                             messageFormatted = message;
                         } else {
@@ -141,20 +145,19 @@ export async function SendReplies(discord, bot, userMessage, replies, reactions 
             finalReplyMessage = messages[i];
 
             if (reactToMessageNumber == i) {
-                let replyMessage = Array.isArray(finalReplyMessage) ? finalReplyMessage[0] : finalReplyMessage;
-                await this.ReactToMessageAsync(bot, replyMessage, reactions);
+                const replyMessage = Array.isArray(finalReplyMessage) ? finalReplyMessage[0] : finalReplyMessage;
+                await ReactToMessageAsync(bot, replyMessage, reactions as any);
                 reacted = true;
             }
         }
         if (reactions != null && reacted != true) {
-            let replyMessage = Array.isArray(finalReplyMessage) ? finalReplyMessage[0] : finalReplyMessage;
-            await this.ReactToMessageAsync(bot, replyMessage, reactions);
+            const replyMessage = Array.isArray(finalReplyMessage) ? finalReplyMessage[0] : finalReplyMessage;
+            await ReactToMessageAsync(bot, replyMessage, reactions as any);
         }
     }
 }
 
-function FixBulletPoints(text) {
-
+function FixBulletPoints(text: string): string {
     const bulletOne = "\uFEFF\u2001\u2022 ";
     const bulletTwo = "\uFEFF\u2001\u2001\u2043 ";
 
@@ -169,9 +172,8 @@ function FixBulletPoints(text) {
     return text;
 }
 
-async function ParseEmbeddedMessage(discord, embeddedMessage) {
-
-    var attachment = null;
+async function ParseEmbeddedMessage(embeddedMessage: any): Promise<any> {
+    let attachment: AttachmentBuilder | null = null;
 
     if (typeof embeddedMessage.embed.type === "undefined" || embeddedMessage.embed.type == null) {
         embeddedMessage.embed.type = "rich";
@@ -182,9 +184,9 @@ async function ParseEmbeddedMessage(discord, embeddedMessage) {
     }
 
     if (typeof embeddedMessage.embed.fields !== "undefined" && embeddedMessage.embed.fields != null) {
-        for (var i = 0; i < embeddedMessage.embed.fields.length; i++) {
+        for (let i = 0; i < embeddedMessage.embed.fields.length; i++) {
             if (typeof embeddedMessage.embed.fields[i].value !== "undefined") {
-                let fixedFieldValue = FixBulletPoints(embeddedMessage.embed.fields[i].value);
+                const fixedFieldValue = FixBulletPoints(embeddedMessage.embed.fields[i].value);
                 embeddedMessage.embed.fields[i].value = fixedFieldValue;
             }
         }
@@ -193,9 +195,7 @@ async function ParseEmbeddedMessage(discord, embeddedMessage) {
     if ((typeof embeddedMessage.embed.image === "undefined" || embeddedMessage.embed.image == null)
         && typeof embeddedMessage.embed.table !== "undefined" && embeddedMessage.embed.table != null) {
 
-        // The "text-to-image" npm package causes random crashes on Raspberry Pi 4 so use "text2png"
-        const text2png = require('@thatiemsz/text2png');
-        let imageStream = text2png(embeddedMessage.embed.table, {
+        const imageStream = text2png(embeddedMessage.embed.table, {
             font: '16px Courier',
             color: 'white',
             bgColor: '#2f3136', // Discord Dark Gray
@@ -204,13 +204,14 @@ async function ParseEmbeddedMessage(discord, embeddedMessage) {
             output: 'buffer'
         });
 
+        let imageName: string;
         if (typeof embeddedMessage.embed.title !== "undefined" && embeddedMessage.embed.title != null) {
             imageName = embeddedMessage.embed.title.trim().toLowerCase().replace(/\s/g, "_").replace(/[^a-zA-Z0-9]/ig, "");
         } else {
             imageName = Math.random().toString(36).replace(/[^a-z]+/ig, '').substr(0, 5);
         }
 
-        attachment = new discord.AttachmentBuilder(imageStream, { name: `${imageName}.png` });
+        attachment = new AttachmentBuilder(imageStream, { name: `${imageName}.png` });
         if (attachment != null) {
             embeddedMessage.embed.image = {
                 "url": `attachment://${imageName}.png`
@@ -221,7 +222,7 @@ async function ParseEmbeddedMessage(discord, embeddedMessage) {
     if (attachment == null) {
         return embeddedMessage;
     } else {
-        let message = {
+        const message = {
             "embeds": [embeddedMessage.embed],
             "files": [attachment]
         };

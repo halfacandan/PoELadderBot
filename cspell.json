@@ -2,7 +2,13 @@
     "language": "en-GB",
     // words - list of words to be always considered correct
     "words": [
-        "dropin"
+        "dropin",
+        "registerable",
+        "slashcommands"
+    ],
+    "ignoreRegExpList": [
+        "(@[^\/]+)\/", // Ignore node module imports
+        "/(?:^|(?<![A-Za-z_]))[A-Z_]{2,}(?:$|(?![A-Za-z_]))/g"
     ],
     // flagWords - list of words to be always considered incorrect
     // For example "teh" should be "the"
