@@ -1,21 +1,9 @@
 import { GetCustomAppEmojisAsync } from '../modules/messages.js';
 import { MakeApiGetCallAsync } from '../modules/poeLadderApi.js';
-
-interface Ladder {
-    name: string;
-    identifier: string;
-    isPoe2?: boolean;
-    registerable: boolean;
-    event?: boolean;
-    hardcore?: boolean;
-    private?: boolean;
-    ruthless?: boolean;
-    trade?: boolean;
-    OrderBy?: number;
-}
+import { SlashCommandConfig, Ladder } from '../types/index.js';
 
 // Add the name and description of this slash command to display in the Discord UI
-globalThis.slashCommands['ladders'] = {
+const laddersConfig: SlashCommandConfig = {
     name: 'ladders',
     description: 'List the monitored PoE Ladder leagues',
     actionAsync: async () => {
@@ -26,13 +14,15 @@ globalThis.slashCommands['ladders'] = {
     }
 };
 
-export async function GetIndexedLadders(jwtToken: string | undefined): Promise<Ladder[] | undefined> {
+globalThis.slashCommands['ladders'] = laddersConfig;
+
+async function GetIndexedLadders(jwtToken: string | undefined): Promise<Ladder[] | undefined> {
     const endpointPath = "v1/ladders?indexed=1";
     const json = await MakeApiGetCallAsync(endpointPath, jwtToken ?? null);
     return json;
 }
 
-export async function ListLadders(ladders: Ladder[] | undefined): Promise<any> {
+async function ListLadders(ladders: Ladder[] | undefined): Promise<any> {
     if (!ladders || ladders.length == 0) return null;
 
     const appEmojis = await GetCustomAppEmojisAsync();

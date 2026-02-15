@@ -1,7 +1,7 @@
 import { Client, GatewayIntentBits, REST, SlashCommandBuilder, Routes, ActivityType } from 'discord.js';
 import { RequireAll, GetChannelIdAsync } from './modules/helpers.js';
 import { AboutThisBot, BotError, SendReplies } from './modules/messages.js';
-import { SlashCommandConfig } from './types.js';
+import { SlashCommandConfig } from './types/index.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
@@ -76,6 +76,20 @@ bot.on('clientReady', async () => {
     const commands = 
         Object.entries(globalThis.slashCommands)
             .map(([key, command]) => {
+/*
+                if(command.variables != null && command.variables!.length > 0) {
+                    return new SlashCommandBuilder()
+                        .setName(command.name)
+                        .setDescription(command.description)
+                        .addStringOption(option => 
+                            option.setName(command.variables?[0].name ?? 'var')
+                                .setDescription(command.variables?[0].description ?? 'desc')
+                                .setRequired(command.variables?[0].required) // Makes this field mandatory
+                        )
+                        .toJSON();
+
+                }
+*/
                 return new SlashCommandBuilder()
                     .setName(command.name)
                     .setDescription(command.description)
