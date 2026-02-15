@@ -4,8 +4,10 @@
 
 export { SlashCommandConfig, SlashCommandVariable } from './SlashCommandConfig.js';
 export { SlashCommandsMap } from './SlashCommandsMap.js';
-export { UserProfile } from './UserProfile.js';
+
 export { Ladder } from './Ladder.js';
+export { UserLadderProfile } from './UserLadderProfile.js';
+export { UserProfile } from './UserProfile.js';
 
 import { SlashCommandsMap } from './SlashCommandsMap.js';
 

@@ -1,6 +1,6 @@
 import { GetCustomAppEmojisAsync } from '../modules/messages.js';
 import { MakeApiGetCallAsync } from '../modules/poeLadderApi.js';
-import { SlashCommandConfig, Ladder } from '../types/index.js';
+import { SlashCommandConfig, Ladder, UserLadderProfile } from '../types/index.js';
 
 // Add the name and description of this slash command to display in the Discord UI
 const laddersConfig: SlashCommandConfig = {
@@ -16,13 +16,8 @@ const laddersConfig: SlashCommandConfig = {
 
 globalThis.slashCommands['ladders'] = laddersConfig;
 
-async function GetIndexedLadders(jwtToken: string | undefined): Promise<Ladder[] | undefined> {
-    const endpointPath = "v1/ladders?indexed=1";
-    const json = await MakeApiGetCallAsync(endpointPath, jwtToken ?? null);
-    return json;
-}
+export async function ParseLadderDataIntoFields(ladders: Ladder[] | UserLadderProfile[] | null | undefined): Promise<any|null> {
 
-async function ListLadders(ladders: Ladder[] | undefined): Promise<any> {
     if (!ladders || ladders.length == 0) return null;
 
     const appEmojis = await GetCustomAppEmojisAsync();
@@ -58,11 +53,24 @@ async function ListLadders(ladders: Ladder[] | undefined): Promise<any> {
         )
     ];
 
+    return fields.filter((l: any) => l != null);
+}
+
+async function GetIndexedLadders(jwtToken: string | undefined): Promise<Ladder[] | undefined> {
+    const endpointPath = "v1/ladders?indexed=1";
+    const json = await MakeApiGetCallAsync(endpointPath, jwtToken ?? null);
+    return json;
+}
+
+async function ListLadders(ladders: Ladder[] | undefined): Promise<any> {
+
+    const fields = await ParseLadderDataIntoFields(ladders);
+
     const embeddedMessage = {
         "embed": {
             "title": ":ladder:  Active PoE Ladders",
             "description": `PoE Ladder currently tracks these leagues:`,
-            "fields": fields.filter(l => l != null)
+            "fields": fields
         }
     };
 
@@ -70,13 +78,16 @@ async function ListLadders(ladders: Ladder[] | undefined): Promise<any> {
 }
 
 function PrintLadderGroup(title: string, ladders: Ladder[]): any {
+    
     if (ladders?.length == 0) return null;
+
+    const nonBreakingSpace = "\uFEFF\u2001";
 
     return {
         "name": title,
         "value": ladders
-            .sort((a, b) => (a.OrderBy ?? 0) - (b.OrderBy ?? 0))
-            .map((ladder) => ` * [${ladder.name}](${process.env.SITE_BASE}ladder?ladderIdentifier=${ladder.identifier}&isPoe2=` + (ladder.isPoe2 ?? false).toString() + ")")
+            .sort((a, b) => (a.orderBy ?? 0) - (b.orderBy ?? 0))
+            .map((ladder) => `${nonBreakingSpace}${(ladder.userRanking == null ? ' * ' : `${ladder.userRanking} in `)}[${ladder.name}](${process.env.SITE_BASE}ladder?ladderIdentifier=${ladder.identifier}&isPoe2=` + (ladder.isPoe2 ?? false).toString() + (ladder.user == null ? '' : `&user=${ladder.user}`) + ")")
             .join("\n")
     };
 }

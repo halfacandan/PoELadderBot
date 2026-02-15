@@ -8,5 +8,7 @@ export interface Ladder {
     private?: boolean;
     ruthless?: boolean;
     trade?: boolean;
-    OrderBy?: number;
+    orderBy?: number;
+    user?: string|null;
+    userRanking?: string|null;
 }

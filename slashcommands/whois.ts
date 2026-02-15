@@ -1,4 +1,5 @@
 import { MakeApiGetCallAsync } from '../modules/poeLadderApi.js';
+import { ParseLadderDataIntoFields } from './ladders.js';
 import { SlashCommandConfig, SlashCommandVariable, UserProfile } from '../types/index.js';
 
 // Add the name and description of this slash command to display in the Discord UI
@@ -40,16 +41,13 @@ export async function GetUserLadderProfile(jwtToken: string | undefined, handle:
         return `No profile found for ${nickname ?? handle}`;
     }
 
+    const userLadders = await ParseLadderDataIntoFields(profile.profiles);
+
     const embeddedMessage = {
         "embed": {
             "title": `Who is ${nickname ?? handle}?`,
             "description": `${nickname ?? handle} is [${profile.poeUsername}](${profile.poeSiteUri})`,
-            "fields": profile.profiles?.map(p => {
-                return {
-                    "name": "",
-                    "value": `[${p.leagueName}](${p.poeSiteUri}) - ${p.completionPercentage}%`
-                }
-            })
+            "fields": userLadders
         }
     };
 
