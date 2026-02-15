@@ -25,7 +25,7 @@ export class UserProfile {
         const poeUsernameForUri = json.poeUsername?.replace(/#(\d{4})$/, '-$1');
         this.poeSiteUri = this.PoeSiteUri(poeUsernameForUri);
 
-        const maxRankStringLength = Math.max(...json.profiles.map((profile: any) => profile.rank ?? 0)).toString().length;
+        const maxRankStringLength = json.profiles == null ? 0 : Math.max(...json.profiles?.map((profile: any) => profile.rank ?? 0)).toString().length;
         this.profiles = json.profiles?.map((profile: any)=> new UserLadderProfile(profile, poeUsernameForUri, maxRankStringLength)) ?? null;
     }
 

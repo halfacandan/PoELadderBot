@@ -1,3 +1,4 @@
+import { GetCustomAppEmojisAsync } from '../modules/messages.js';
 import { MakeApiGetCallAsync } from '../modules/poeLadderApi.js';
 import { ParseLadderDataIntoFields } from './ladders.js';
 import { SlashCommandConfig, SlashCommandVariable, UserProfile } from '../types/index.js';
@@ -41,12 +42,31 @@ export async function GetUserLadderProfile(jwtToken: string | undefined, handle:
         return `No profile found for ${nickname ?? handle}`;
     }
 
+    const appEmojis = await GetCustomAppEmojisAsync();
+
     const userLadders = await ParseLadderDataIntoFields(profile.profiles);
+
+    const lineBreak = "\n\uFEFF\u2001 ";
+    const platformIcon = profile.xbox ? appEmojis["xbox"] : profile.playstation ? appEmojis["playstation"] : ":desktop:";
+    let message = `${nickname ?? handle} is [${profile.poeUsername}](${profile.poeSiteUri})\u00A0\u00A0${platformIcon}`;
+
+    if(profile.youtube != null) {
+
+        let youTubeAccount = profile.youtube.slice(0, 1) == "@" ? profile.youtube : nickname ?? handle;
+        let youTubeLink = (profile.youtube.slice(0, 1) == "@" ? "https://www.youtube.com/" : "https://www.youtube.com/channel/") + profile.youtube;
+        message += `${lineBreak}${appEmojis["youtube"]}\u00A0\u00A0[${youTubeAccount}](${youTubeLink})`;
+    }
+    if(profile.twitch != null) {
+
+        let twitchAccount = profile.twitch ?? nickname ?? handle;
+        let twitchLink = "https://www.twitch.tv/" + profile.twitch;
+        message += `${lineBreak}${appEmojis["twitch"]}\u00A0\u00A0[${twitchAccount}](${twitchLink})`;
+    }
 
     const embeddedMessage = {
         "embed": {
             "title": `Who is ${nickname ?? handle}?`,
-            "description": `${nickname ?? handle} is [${profile.poeUsername}](${profile.poeSiteUri})`,
+            "description": message,
             "fields": userLadders
         }
     };

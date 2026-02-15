@@ -62,6 +62,12 @@ export async function GetServerEmojiCodeAsync(bot: Client, emojiShortcode: strin
 }
 
 export async function GetCustomAppEmojisAsync(): Promise<{ [key: string]: string }> {
+
+    // This function retrieves emojis which are associated with the Application (bot) itself.
+    // This allows the use of custom emojis in embedded messages without requiring servers to install a custom emoji pack
+    // To use this function, add custom emojis to your bot's profile in the Discord Developer Portal 
+    // and use the shortcode (e.g. :myemoji:) in your messages.
+
     const apiPath = `https://discord.com/api/v10/applications/${process.env.CLIENT_ID}/emojis`;
     const emojiQuery = await fetch(apiPath, { headers: { Authorization: `Bot ${process.env.BOT_TOKEN}` } });
     const emojiList = await emojiQuery.json() as any;
