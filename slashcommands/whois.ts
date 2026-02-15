@@ -19,7 +19,9 @@ const whoisConfig: SlashCommandConfig = {
 
         // Lookup the Discord handle in the command variables to get the user's nickname and username
         const discordAccount = interaction.options.getUser('handle');
-        const userNickname = interaction.guild.members.cache.get(discordAccount.id).nickname;
+
+        const userGuildAccount = await interaction.guild.members.cache.get(discordAccount.id);
+        const userNickname = userGuildAccount.nickname ?? userGuildAccount.user.globalName;
 
         const jwtToken = process.env.API_JWT;
         const userLadderProfile = await GetUserLadderProfile(jwtToken, discordAccount.username, userNickname);
