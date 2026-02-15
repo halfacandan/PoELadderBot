@@ -23,7 +23,7 @@ const whoisConfig: SlashCommandConfig = {
         interaction.guild.members.fetch();
         const userGuildAccount = await interaction.guild.members.cache.get(discordAccount.id);
         console.log(userGuildAccount);
-        const userNickname = userGuildAccount.nickname;
+        const userNickname = userGuildAccount.nickname ?? userGuildAccount.user.globalName;
 
         const jwtToken = process.env.API_JWT;
         const userLadderProfile = await GetUserLadderProfile(jwtToken, discordAccount.username, userNickname);
