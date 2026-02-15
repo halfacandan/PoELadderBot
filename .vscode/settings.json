@@ -2,7 +2,8 @@
     "editor.accessibilitySupport": "off",
     "editor.wordWrap": "off",
     "[markdown]": {
-        "editor.wordWrap": "off"
+        "editor.wordWrap": "off",
+        "editor.formatOnSave": true
     },
     "cSpell.customDictionaries": {
         "custom-dictionary-workspace": {

@@ -76,24 +76,35 @@ bot.on('clientReady', async () => {
     const commands = 
         Object.entries(globalThis.slashCommands)
             .map(([key, command]) => {
-/*
-                if(command.variables != null && command.variables!.length > 0) {
-                    return new SlashCommandBuilder()
-                        .setName(command.name)
-                        .setDescription(command.description)
-                        .addStringOption(option => 
-                            option.setName(command.variables?[0].name ?? 'var')
-                                .setDescription(command.variables?[0].description ?? 'desc')
-                                .setRequired(command.variables?[0].required) // Makes this field mandatory
-                        )
-                        .toJSON();
 
-                }
-*/
-                return new SlashCommandBuilder()
+                var slashCommand = new SlashCommandBuilder()
                     .setName(command.name)
-                    .setDescription(command.description)
-                    .toJSON();
+                    .setDescription(command.description);
+
+                if(typeof command.variables !== "undefined" && (command.variables?.length ?? 0) > 0) {
+
+                    command.variables?.map(variable => {
+
+                        if(variable.type == "user") {
+
+                            slashCommand.addUserOption(option => 
+                                option.setName(variable.name ?? 'User')
+                                    .setDescription(variable.description ?? 'Add a user handle (e.g. @halfacandan)')
+                                    .setRequired(variable.required ?? false)
+                            );
+
+                        } else {
+
+                            slashCommand.addStringOption(option => 
+                                option.setName(variable.name ?? 'Input')
+                                    .setDescription(variable.description ?? 'Add an input value')
+                                    .setRequired(variable.required ?? false)
+                            );
+                        }
+                    });
+                }
+
+                return slashCommand.toJSON();;
             });
 
     // Configure the slash commands
@@ -120,7 +131,7 @@ bot.on('interactionCreate', async (interaction: any) => {
     
     if(interaction.commandName == null) return;
 
-    const actionResult = await globalThis.slashCommands[interaction.commandName]?.actionAsync();
+    const actionResult = await globalThis.slashCommands[interaction.commandName]?.actionAsync(interaction);
     replies.push(actionResult ?? BotError());
 
     await SendReplies(bot, interaction, replies, null, false, null, true);

@@ -4,11 +4,12 @@ This project creates a Discord bot which interacts with PoE Ladder's bot api.
 
 ## Commands
 
-| Command  | Description                                                |
-| -------- | ---------------------------------------------------------- |
-| /about   | Info on how to add new functionality to the PoE Ladder Bot |
-| /help    | List all available commands                                |
-| /ladders | List the monitored PoE Ladder leagues                      |
+| Command                  | Description                                   |
+| ------------------------ | --------------------------------------------- |
+| /about                   | Learn how to contribute to the PoE Ladder bot |
+| /help                    | Get help with using the PoE Ladder bot        |
+| /ladders                 | List the monitored PoE Ladder leagues         |
+| /whois \[DiscordHandle\] | Lookup a Discord user's PoE Ladder Profile    |
 
 ## Local Development of the Bot
 

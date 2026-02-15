@@ -2,7 +2,7 @@
 // in one place so other files only need to import from here instead of hunting
 // through multiple files. It also declares the global slashCommands variable.
 
-export { SlashCommandConfig } from './SlashCommandConfig.js';
+export { SlashCommandConfig, SlashCommandVariable } from './SlashCommandConfig.js';
 export { SlashCommandsMap } from './SlashCommandsMap.js';
 export { UserProfile } from './UserProfile.js';
 export { Ladder } from './Ladder.js';
