@@ -37,7 +37,7 @@ export async function GetUserLadderProfile(jwtToken: string | undefined, handle:
     const endpointPath = `v1/bot/whois?handle=${handle}&nickname=${nickname}`;
     const profile: UserProfile = new UserProfile(await MakeApiGetCallAsync(endpointPath, jwtToken ?? null));
     
-    if(profile.handle == null && profile.displayName == null) {
+    if(profile.handle == null && profile.displayName == null || profile.poeUsername == null || profile.poeSiteUri == null) {
 
         return `No profile found for ${nickname ?? handle}`;
     }
@@ -45,9 +45,9 @@ export async function GetUserLadderProfile(jwtToken: string | undefined, handle:
     const appEmojis = await GetCustomAppEmojisAsync();
 
     const userLadders = await ParseLadderDataIntoFields(profile.profiles);
-
+    
     const lineBreak = "\n\uFEFF\u2001 ";
-    const platformIcon = profile.xbox ? appEmojis["xbox"] : profile.playstation ? appEmojis["playstation"] : ":desktop:";
+    const platformIcon = profile.xbox ? appEmojis["xbox"] : profile.playstation ? appEmojis["playstation"] : "";
     let message = `${nickname ?? handle} is [${profile.poeUsername}](${profile.poeSiteUri})\u00A0\u00A0${platformIcon}`;
 
     if(profile.youtube != null) {

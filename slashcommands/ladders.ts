@@ -87,7 +87,7 @@ function PrintLadderGroup(title: string, ladders: Ladder[]): any {
         "name": title,
         "value": ladders
             .sort((a, b) => (a.orderBy ?? 0) - (b.orderBy ?? 0))
-            .map((ladder) => `${nonBreakingSpace}${(ladder.userRanking == null ? ' * ' : `${ladder.userRanking} in `)}[${ladder.name}](${process.env.SITE_BASE}ladder?ladderIdentifier=${ladder.identifier}&isPoe2=` + (ladder.isPoe2 ?? false).toString() + (ladder.user == null ? '' : `&user=${ladder.user}`) + ")")
+            .map((ladder) => `${nonBreakingSpace}${(ladder.userRanking == null ? ' * ' : `${ladder.userRanking} in `)}[${ladder.name}](${process.env.SITE_BASE}${ladder.userRanking == null ? "ladder" : "profile"}?ladderIdentifier=${ladder.identifier}&isPoe2=` + (ladder.isPoe2 ?? false).toString() + (ladder.user == null ? '' : `&user=${ladder.user}`) + ")")
             .join("\n")
     };
 }
